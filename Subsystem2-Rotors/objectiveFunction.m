@@ -4,7 +4,6 @@ function f = objectiveFunction(x, Pr)
     n_r = 4;
     n_b = 2;
     g = 9.81;
-    %Pr = 1780;
     Pf = 2;
     
     %mass function

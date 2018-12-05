@@ -2,13 +2,23 @@ close all
 clear all
 
 %% Notes
-%Where applicable, I havve used the same variable notation as described in
+%Where applicable, I have used the same variable notation as described in
 %the function documentation. Where not applicable, or multiple variations
-%are required, the variable names hae been changed but remain suitable and
+%are required, the variable names have been changed but remain suitable and
 %are described by their respective comments.
 
-%% Initial point
+%% Initial point & Parameters
+
 x0 = [0.03,0.08,0.08,0.001,0.01];
+
+%Design Parameters
+theta = 1.3; %Angle of Attack
+omega = 1528; %Maximum angular velocity
+rho_air = 1.225; %Density of Air
+g = 9.81; %Acceleration due to Gravity
+n_r = 4; %Number of rotors
+n_b = 2; %Number of blades per rotor
+m_d = 1.4; %Mass of Drone
 
 %% Bounds
 % Need rationale for all of these bounds. Whether that is due to
@@ -59,39 +69,6 @@ beq = [-0.02; %Active
 Aeq = [];
 beq = [];
 
-%% Tables Indexes
-
-%{
-
-%1 = material name
-%2 = material type
-%3 = density lower bound (kg m-3)
-%4 = density upper bound (kg m-3)
-%5 = price lower bound (Â£ kg-1)
-%6 = price upper bound (Â£ kg-1)
-%7 = yield stress lower bound
-%8 = yield stress upper bound
-%9 = young's modulus lower bound
-%10 = young's modulus upper bound
-%}
-
-%strings
-name = 1;
-type = 2;
-
-%floats
-%Subtract 2 when indexing due to these, as strings aren't included when
-%reading data
-d_lb = 3;
-d_ub = 4;
-p_lb = 5;
-p_ub = 6;
-ys_lb = 7;
-ys_ub = 8;
-ys_lb = 9;
-ys_ub = 10;
-
-
 %% Reading material properties
 
 filename = 'mat_ces.csv';
@@ -99,54 +76,64 @@ filename = 'mat_ces.csv';
 %Import Material Properties as Table
 mat = readtable(filename);
 
-%Store material names in array
-names = mat(:,1);
-names = table2array(names)';
-
-%Store material types in array
-types = mat(:,2);
-types = table2array(types)';
-
-%Material Properties
-data= csvread(filename,0,2);
-[m,n] = size(data);
-
-densities = (data(:,d_lb-2) + data(:,d_lb-2))/2; %Material Densities
-costs = (data(:,p_lb-2) + data(:,p_ub-2))/2; %Material Costs per Kg
-stresses = (data(:,ys_lb-2) + data(:,ys_lb-2))/2; %Yield Stresses of materials
+%Convert data to Struct format
+M = table2struct(mat);
+[m ] = size(M);
 
 %% Minimisation function
 
-%Initialising lists for optimal solutions
-x_mat = zeros(5,m);
-f_list = zeros(1,m);
-p_list = zeros(1,m);
-exitflags = zeros(1,m);
-
 %For loop to iterate through materials
 for t=1:m
+       
+    %Average Desnity and Stress of Material
+    rho = ((M(t).Density_LB + M(t).Density_UB)/2);
+    sig = ((M(t).YS_LB + M(t).YS_UB)/2);
     
-    d = densities(t); %Conversion to Kg/m^3
-    sig = stresses(t)*10^6; %Conversion to MPa
-    confun = @(x)constraintFunction(x, d, sig); 
-    fun = @(x)objectiveFunction(x, d);
+    %Creating instances of the Objective function and Constraint function
+    confun = @(x)constraintFunction(x, rho, sig); 
+    fun = @(x)objectiveFunction(x, rho);
     
+    %Executing Optimisation Function
     [x,fval,exitflag,output] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,confun);
-    f_list(t) = fval;
-    x_mat(:,t) = x;
-    p_list(t) = fval*costs(t);
     
-    clear d
+    %Append the metrics from the Material
+    M(t).Mass = fval;
+    M(t).Cost = fval*(M(t).Price_LB + M(t).Price_UB)/2;
+    M(t).Thrust = 2*n_r*n_b*(x(3)^2 - x(4)^2)*x(1)*sin(theta)*omega*rho_air*g;
+    M(t).Stress = (m_d*g*(x(4)))/(n_r*n_b*pi*x(5)*x(2)^3);
+    M(t).ExitFlag = exitflag;
+    M(t).Vars = x;
 end
+
+%Finding index of struct with smallest mass
+[val,idx] = min([M.Mass]);
 
 %% Print functions
 
-%Reporting out results of optimisations
-for q=1:m; displayResults(names(q),f_list(q),p_list(q),x_mat(:,q),stresses(q),exitflags(q)); end
+%Reporting out results of Optimisation
+for q=1:m
+    disp(['Material: ' M(q).Name])
+    disp(['Exit flag:' num2str(M(q).ExitFlag)])
+    disp(['Min. weight [Kg] = ' num2str(M(q).Mass)])
+    disp(['Price [£] = ' num2str(M(q).Cost)])
+    disp(['Width x(1) [m] = ' num2str(M(q).Vars(1))])
+    disp(['Thickness x(2) [m] = ' num2str(M(q).Vars(2))])
+    disp(['Length x(3) [m] = ' num2str(M(q).Vars(3))])
+    disp(['Length Root x(4) [m] = ' num2str(M(q).Vars(4))])
+    disp(['Width Root x(5) [m] = ' num2str(M(q).Vars(5))])
+    disp(['Thrust Generated: ' num2str(M(q).Thrust)])
+    disp(['Stress at root: ' num2str(M(q).Stress)])
+    disp(['Yield stress: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
+end
 
-%Plotting cost against mass
+disp([" "])
+disp(["Optimal Material for Mass: " + M(idx).Name]);
+
+%% Plots
+
+%Plotting Cost against Mass
 figure(1);
-scatter(p_list, f_list, 5, 'filled');
+scatter([M.Cost], [M.Mass], 5, 'filled');
 title('Price vs. Mass Pareto');
-xlabel('Price ($)');
+xlabel('Price (£)');
 ylabel('Mass (Kg)');
