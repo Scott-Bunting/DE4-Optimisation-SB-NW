@@ -142,7 +142,7 @@ end
 %% Print functions
 
 %Reporting out results of optimisations
-for q=1:m; disp_ans(names(q),f_list(q),p_list(q),x_mat(:,q),stresses(q),exitflags(q)); end
+for q=1:m; displayResults(names(q),f_list(q),p_list(q),x_mat(:,q),stresses(q),exitflags(q)); end
 
 %Plotting cost against mass
 figure(1);
