@@ -1,4 +1,4 @@
-function [c,ceq] = constraintFunction(x, Pr, sig)
+function [c,ceq] = constraintFunction(x, rho, sig)
 
     %Parameters for non-linear constraint
     
@@ -15,7 +15,7 @@ function [c,ceq] = constraintFunction(x, Pr, sig)
     
     %Non-linear Thrust Equation
     c1 = (Pf*m_d*g)/n_r - 2*n_r*n_b*(x(3)^2 - x(4)^2)*x(1)*sin(theta)*omega*rho_air*g...
-        + pi*Pr*x(1)*n_r*n_b*(x(2)*(x(3) - x(4)) + x(5)*x(4));
+        + pi*rho*x(1)*n_r*n_b*(x(2)*(x(3) - x(4)) + x(5)*x(4));
     
     %sig is the yield stress of the material
     c2 = (FOS*m_d*g*(x(4)))/(n_r*n_b*pi*x(5)*x(2)^3) - sig;
