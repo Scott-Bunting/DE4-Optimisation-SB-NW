@@ -87,7 +87,7 @@ for t=1:m
        
     %Average Desnity and Stress of Material
     rho = ((M(t).Density_LB + M(t).Density_UB)/2);
-    sig = ((M(t).YS_LB + M(t).YS_UB)/2);
+    sig = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6;
     
     %Creating instances of the Objective function and Constraint function
     confun = @(x)constraintFunction(x, rho, sig); 

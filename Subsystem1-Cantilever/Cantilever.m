@@ -12,7 +12,7 @@ k = 1.875;
 
 sigmax = 2780000000;
 defmax = 0.001;
-fmin = 250;
+fmin = 350;
 
 %% optimisation
 objective = @(x) (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3))))*x(4)*ro;
