@@ -7,6 +7,13 @@ clear all
 %are required, the variable names have been changed but remain suitable and
 %are described by their respective comments.
 
+%% Change Initial Values and Bounds to:
+
+% %Width
+% x1_lb = xx
+% x1_ub = xx
+% x1_in = xx
+
 %% Initial point & Parameters
 
 x0 = [0.03,0.08,0.08,0.001,0.01];

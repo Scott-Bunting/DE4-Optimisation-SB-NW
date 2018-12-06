@@ -1,4 +1,4 @@
-function [x, Fl, val] = main_function(md, l)
+function [x, Fl, mass, cost] = main_function(md, l)
 
     %% Notes
     %Where applicable, I have used the same variable notation as described in
@@ -106,33 +106,40 @@ function [x, Fl, val] = main_function(md, l)
     end
 
     %Outputting linking variables
-    [val,idx] = min([M.Mass]);
+    [mass,idx] = min([M.Mass]);
     optim = M(idx).Vars;
     Fl = M(idx).Thrust;
+    cost = M(idx).Cost;
+    
     
     
 
     %% Print functions
 
     %Reporting out results of Optimisation
-    for q=1:m
-        disp(['Material: ' M(q).Name])
-        disp(['Exit flag:' num2str(M(q).ExitFlag)])
-        disp(['Min. weight [Kg] = ' num2str(M(q).Mass)])
-        disp(['Price [£] = ' num2str(M(q).Cost)])
-        disp(['Width x(1) [m] = ' num2str(M(q).Vars(1))])
-        disp(['Thickness x(2) [m] = ' num2str(M(q).Vars(2))])
-        disp(['Length x(3) [m] = ' num2str(M(q).Vars(3))])
-        disp(['Length Root x(4) [m] = ' num2str(M(q).Vars(4))])
-        disp(['Width Root x(5) [m] = ' num2str(M(q).Vars(5))])
-        disp(['Thrust Generated: ' num2str(M(q).Thrust)])
-        disp(['Stress at root: ' num2str(M(q).Stress)])
-        disp(['Yield stress: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
-    end
+    
+% Commented out as not required for System Level Optimisation
+%     for q=1:m
+%         disp(['Material: ' M(q).Name])
+%         disp(['Exit flag:' num2str(M(q).ExitFlag)])
+%         disp(['Min. weight [Kg] = ' num2str(M(q).Mass)])
+%         disp(['Price [£] = ' num2str(M(q).Cost)])
+%         disp(['Width x(1) [m] = ' num2str(M(q).Vars(1))])
+%         disp(['Thickness x(2) [m] = ' num2str(M(q).Vars(2))])
+%         disp(['Length x(3) [m] = ' num2str(M(q).Vars(3))])
+%         disp(['Length Root x(4) [m] = ' num2str(M(q).Vars(4))])
+%         disp(['Width Root x(5) [m] = ' num2str(M(q).Vars(5))])
+%         disp(['Thrust Generated: ' num2str(M(q).Thrust)])
+%         disp(['Stress at root: ' num2str(M(q).Stress)])
+%         disp(['Yield stress: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
+%     end
 
     disp([" "])
     disp(["Optimal Material for Mass: " + M(idx).Name]);
-
+    disp(['Min. weight [Kg] = ' num2str(M(idx).Mass)])
+    disp(['Price [£] = ' num2str(M(idx).Cost)])
+    disp(['Thrust Generated: ' num2str(M(idx).Thrust)])
+    
     %% Plots
 
     %Plotting Cost against Mass
