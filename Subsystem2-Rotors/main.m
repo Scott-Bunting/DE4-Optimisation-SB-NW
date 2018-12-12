@@ -33,9 +33,9 @@ lb = [0.001, 0.001, 0.001, 0.001, 0.001];
 
 %Ask whether the upper bound for this should be Infinite or it should be
 %limited in the bounds. It is inherently limited by the linear inequality.
-ub = [0.05, 0.1, 0.12, 0.12, 0.05];
+%ub = [0.05, 0.1, 0.12, 0.12, 0.05];
 %ub = [1,1,1,1,1];
-%ub = [Inf,Inf,Inf,Inf,Inf];
+ub = [Inf,Inf,Inf,Inf,Inf];
 
 %% Semi-active Constraints
 
@@ -92,6 +92,7 @@ options = optimoptions('fmincon','Algorithm','interior-point');
 
 %For loop to iterate through materials
 for t=1:m
+    
     %Average Density and Stress of Material
     rho = ((M(t).Density_LB + M(t).Density_UB)/2);
     sig = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6;
