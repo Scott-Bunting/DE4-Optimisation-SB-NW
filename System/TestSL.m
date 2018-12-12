@@ -22,7 +22,7 @@ r = 0.1867;
 l = 0.8;
 p_cfrp = 29.95;
 
-md = m1 + mm + mc + mr;
+md = m1 + mm + mc*4 + mr;
 cost_c = 50;
 cost_r = 50;
 

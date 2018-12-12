@@ -12,7 +12,7 @@ k = 1.875;
 
 sigmax = 2780000000;
 defmax = 0.001;
-fmin = 350;
+fmin = rpm/60*1.3;
 
 %% optimisation
 objective = @(x) (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3))))*x(4)*ro;
