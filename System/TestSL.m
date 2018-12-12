@@ -46,7 +46,7 @@ while (dc > 0.01*10^-6 && dm > 0.001*10^-6)
     l = x(4);
     price_list_c = [price_list_c cost_c];
     
-    [x, Fl, mr, cost_r] = main_function(md1, l);
+    [x, Fl, mr, cost_r] = main_function(md1, sqrt(l/2));
     mass_list_r = [mass_list_r mr];
     thrust_list = [thrust_list Fl];
     price_list_r = [price_list_r cost_r];
