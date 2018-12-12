@@ -30,10 +30,11 @@ m_d = 1.4; %Mass of Drone
 % manufacturing requirements or feasibility.
 
 %Initial Point
-x0 = [0.03,0.08,0.08,0.01,0.01];
+x0 = [0.03,0.03,0.08,0.005,0.005];
 
 %Lower bounds
 lb = [0.01, 0.005, 0, 0.005, 0.005];
+%lb = [0.0, 0.00, 0, 0.00, 0.00];
 
 %Ask whether the upper bound for this should be Infinite or it should be
 %limited in the bounds. It is inherently limited by the linear inequality.
@@ -111,10 +112,10 @@ for t=1:m
     M(t).Mass = fval;
     M(t).Cost = fval*(M(t).Price_LB + M(t).Price_UB)/2;
     M(t).Thrust = 2*n_r*n_b*(x(3)^2 - x(4)^2)*x(1)*sin(theta)*omega*rho_air*g;
-    M(t).Stress = (m_d*g*(x(4)))/(n_r*n_b*pi*x(5)*x(2)^3);
+    M(t).Stress = (m_d*g*(x(3)))/(n_r*n_b*pi*x(5)*x(2)^3);
     I = (pi/4)*(x(1)/2)*(x(2)/2)^3;
-    om = (M(t).Thrust)/x(4);
-    M(t).Deflection = (om*x(4)^4/8*E*I);
+    om = (M(t).Thrust/(n_r*n_b))/x(3);
+    M(t).Deflection = (om*x(3)^4/8*E*I);
     M(t).ExitFlag = exitflag;
     M(t).Vars = x;
 end
