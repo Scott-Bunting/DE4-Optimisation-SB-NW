@@ -1,4 +1,4 @@
-function [c,ceq] = constraintFunction(x, rho, sig)
+function [c,ceq] = constraintFunction(x, rho, sig, E)
 
     %Input variables
     %{
@@ -27,11 +27,17 @@ function [c,ceq] = constraintFunction(x, rho, sig)
     %Root Stress
     c2 = (FOS*m_d*g*(x(4)))/(n_r*n_b*pi*x(5)*x(2)^3) - sig;
     
+    %Deflection
+    Thrust = (x(3)^2 - x(4)^2)*x(1)*sin(theta)*omega*rho_air*g;
+    I = (pi/4)*(x(1)/2)*(x(2)/2)^3;
+    omega = Thrust/x(4);
+    c3 = (omega*x(4)^4/8*E*I) - 1*10^-10;
+    
     %Concatenating the Constraints
     c = [c1;
-        c2];
+        c2;
+        c3];
     
-    %Deflection - to be completed
     
     %% Non-linear Constraints (Equalities)
     % Currently none - need to check activity
