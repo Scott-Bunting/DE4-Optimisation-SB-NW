@@ -16,8 +16,13 @@ md = m1 + mm + mc + mr;
 disp('|||||||||||||||||||||||||||||||||||||');
 disp('-------------> START <---------------');
 disp('|||||||||||||||||||||||||||||||||||||');
-for i=1:5
-    disp(i);
-    [x, mc] = Cantilever(Fl,mm,md,rpm,l);
-    l = l-0.1;
-end
+
+[x, mc, name] = CantileverMultiMat(Fl,mm,md,rpm,l);
+
+disp(['Lightest arm made of: ' name '  Weighting: ' num2str(mc)]);
+
+% for i=1:5
+%     disp(i);
+%     [x, mc] = Cantilever(Fl,mm,md,rpm,l);
+%     l = l-0.1;
+% end
