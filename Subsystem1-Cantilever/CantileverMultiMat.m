@@ -15,10 +15,10 @@ mat = readtable(filename);
 M = table2struct(mat);
 [m] = size(M);
 
-options = optimoptions(@fmincon,'MaxFunctionEvaluations',5000)
+options = optimoptions(@fmincon,'Algorithm', 'sqp','MaxFunctionEvaluations',5000)
 
 %For loop to iterate through materials
-for i=1:m
+for i=1:1 %m
 
     %Average Desnity and Stress of Material
     rho = ((M(i).Density_LB + M(i).Density_UB)/2);
@@ -50,8 +50,9 @@ for i=1:m
     % optimize with fmincon
     %[X,FVAL,EXITFLAG,OUTPUT,LAMBDA,GRAD,HESSIAN] 
     % = fmincon(FUN,X0,A,B,Aeq,Beq,LB,UB,NONLCON,OPTIONS)
+    tic
     [x, fval, ef, output, lambda] = fmincon(objective,x0,A,b,Aeq,beq,lb,ub,nonlincon, options);
-
+    toc
     % show final objective
     disp(M(i).Name)
     disp(['Final arm weight [kg]: ' num2str(objective(x))])
