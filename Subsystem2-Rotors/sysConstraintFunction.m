@@ -20,6 +20,7 @@ function [c,ceq] = sysConstraintFunction(x, rho, sig, md)
     c2 = (FOS*md*g*(x(4)))/(n_r*n_b*pi*x(5)*x(2)^3) - sig;
     c = [c1;
         c2];
+    
     %Nonlinear Stress constraints
     ceq = 0;
     
