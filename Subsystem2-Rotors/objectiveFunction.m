@@ -4,7 +4,6 @@ function f = objectiveFunction(x, rhoRotor)
     
     numberRotors = 4;
     numberBlades = 2;
-    g = 9.81;
     
     %% Objective function definition
     
