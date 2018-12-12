@@ -1,12 +1,12 @@
-function f = objectiveFunction(x, Pr)
+function f = objectiveFunction(x, rhoRotor)
     
     %Parameters for mass
-    n_r = 4;
-    n_b = 2;
+    numberRotors = 4;
+    numberBlades = 2;
     g = 9.81;
-    Pf = 2;
+    powerFactor = 2;
     
     %mass function
-    f = n_r*n_b*Pr*x(1)*(x(2)*(x(3)-x(4)) + x(5)*x(4));
+    f = numberRotors*numberBlades*rhoRotor*x(1)*(x(2)*(x(3)-x(4)) + x(5)*x(4));
 
 end
