@@ -4,7 +4,6 @@ function f = objectiveFunction(x, rhoRotor)
     numberRotors = 4;
     numberBlades = 2;
     g = 9.81;
-    powerFactor = 2;
     
     %mass function
     f = numberRotors*numberBlades*rhoRotor*x(1)*(x(2)*(x(3)-x(4)) + x(5)*x(4));
