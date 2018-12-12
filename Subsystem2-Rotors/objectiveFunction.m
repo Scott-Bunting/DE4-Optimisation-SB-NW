@@ -1,6 +1,6 @@
 function f = objectiveFunction(x, Pr)
     
-    %parameters for mass
+    %Parameters for mass
     n_r = 4;
     n_b = 2;
     g = 9.81;

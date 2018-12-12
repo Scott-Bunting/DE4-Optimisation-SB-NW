@@ -26,23 +26,6 @@ md = m1 + mm + mc*4 + mr;
 cost_c = 50;
 cost_r = 50;
 
-% for i = 1:3
-%     
-%     c1 = cost;
-%     [x, mc] = Cantilever(Fl,mm,md,rpm,l);
-%     md = m1 + mm + mc + mr;
-%     l = x(4);
-%     
-%     [x, Fl, mr, cost, mass] = main_function(md, l);
-%     md = m1 + mm + mc + mr;
-%     l = x(3);
-%     c2 = cost;
-%     
-%     dc = c1-c2;
-%     
-% 
-% end
-
 dc = 1;
 dm = 1;
 md2 = m1 + mm + mc + mr;

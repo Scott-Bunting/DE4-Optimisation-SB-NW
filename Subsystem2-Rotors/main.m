@@ -16,8 +16,6 @@ clear all
 
 %% Initial point & Parameters
 
-x0 = [0.03,0.08,0.08,0.001,0.01];
-
 %Design Parameters
 theta = 1.3; %Angle of Attack
 omega = 1528; %Maximum angular velocity
@@ -31,12 +29,15 @@ m_d = 1.4; %Mass of Drone
 % Need rationale for all of these bounds. Whether that is due to
 % manufacturing requirements or feasibility.
 
+%Initial Point
+x0 = [0.03,0.08,0.08,0.01,0.01];
+
 %Lower bounds
-lb = [0.02, 0.005, 0, 0.005, 0.005];
+lb = [0.01, 0.005, 0, 0.005, 0.005];
 
 %Ask whether the upper bound for this should be Infinite or it should be
 %limited in the bounds. It is inherently limited by the linear inequality.
-ub = [0.05, 0.01, 0.12, 0.12, 0.05];
+ub = [0.05, 0.1, 0.12, 0.12, 0.05];
 
 %% Semi-active Constraints
 
@@ -89,25 +90,31 @@ M = table2struct(mat);
 
 %% Minimisation function
 
+options = optimoptions('fmincon','Display','iter','Algorithm','interior-point');
+
 %For loop to iterate through materials
 for t=1:m
        
     %Average Desnity and Stress of Material
     rho = ((M(t).Density_LB + M(t).Density_UB)/2);
     sig = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6;
+    E = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9;
     
     %Creating instances of the Objective function and Constraint function
-    confun = @(x)constraintFunction(x, rho, sig); 
+    confun = @(x)constraintFunction(x, rho, sig, E); 
     fun = @(x)objectiveFunction(x, rho);
     
     %Executing Optimisation Function
-    [x,fval,exitflag,output] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,confun);
+    [x,fval,exitflag,output] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,confun,options);
     
     %Append the metrics from the Material
     M(t).Mass = fval;
     M(t).Cost = fval*(M(t).Price_LB + M(t).Price_UB)/2;
     M(t).Thrust = 2*n_r*n_b*(x(3)^2 - x(4)^2)*x(1)*sin(theta)*omega*rho_air*g;
     M(t).Stress = (m_d*g*(x(4)))/(n_r*n_b*pi*x(5)*x(2)^3);
+    I = (pi/4)*(x(1)/2)*(x(2)/2)^3;
+    om = (M(t).Thrust)/x(4);
+    M(t).Deflection = (om*x(4)^4/8*E*I);
     M(t).ExitFlag = exitflag;
     M(t).Vars = x;
 end
@@ -130,6 +137,7 @@ for q=1:m
     disp(['Width Root x(5) [m] = ' num2str(M(q).Vars(5))])
     disp(['Thrust Generated: ' num2str(M(q).Thrust)])
     disp(['Stress at root: ' num2str(M(q).Stress)])
+    disp(['Deflection: ' num2str(M(q).Deflection)])
     disp(['Yield stress: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
 end
 
