@@ -29,32 +29,22 @@ x0 = [0.03,0.03,0.08,0.005,0.005];
 
 %Lower Bounds
 %lb = [0.001, 0.001, 0.001, 0.001, 0.001];
-lb = [0.005, 0.005, 0, 0.005, 0.001];
-
-%The lower bounds are set at 1mm, as it is considered unreasonable for any
-%of the Design Variables of a rotor blade to be smaller than this.
+lb = [0, 0.002, 0, 0.005, 0.001];
 
 %Upper Bounds
-%ub = [Inf, Inf, Inf, Inf, Inf];
 ub = [0.01, 0.01, 0.2, 0.2, 0.01];
-
-%The upper bounds have varying limits.
-%The thickness is constrained to 5mm after comparison with blades on the
-%market.
-%The width is constrained to 50mm as this is within the diameter of the
-%motor.
-%The length is constrained to 500mm because any larger would make the drone
-%too large for the application we have proposed.
-
-%All of these need to be amended.
 
 %% Semi-active Constraints
 
-A = [0 0 -1 1 0;
-    -1 0 0 0 1];
+% A = [0 0 -1 1 0;
+%     -1 0 0 0 1];
 
-b = [0;
-    0];
+A = [];
+
+% b = [0;
+%     0];
+
+b = [];
 
 %% Active constraints
 
@@ -88,7 +78,7 @@ gs = GlobalSearch;
 %Setting the options for fmincon
 algorithms = ["interior-point","sqp","sqp-legacy","active-set"...
     ,"trust-region-reflective"]; %exclude trust-region reflective
-a = input('Algorithm'); %to accelerate testing
+a = input('Algorithm  '); %to accelerate testing
 algorithm = algorithms(a);
 options = optimoptions('fmincon','Algorithm',algorithm);
 
@@ -97,6 +87,7 @@ for t=1:m
     rho = ((M(t).Density_LB + M(t).Density_UB)/2);
     sig = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6;
     E = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9;
+    M(t).YM = E;
 
     %Creating instances of the Objective function and Constraint function
     confun = @(x)constraintFunctionEnd(x, rho, sig, E); 
@@ -262,15 +253,13 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     %When unbounded, the order of these constraints directly affects how
     %fmincon attempts to solve the problem
     
-    c = [c1;
-        c2;
-        c3];
+    c = c2;
     
     %% Non-linear Constraints (Equalities)
     % Currently none. Deflection will probably end up being an equality
     % constraint as the deflection always tends to the limit set by the
     % inequality.
     
-    ceq = 0;
+    ceq = [c1;c3];
     
 end
