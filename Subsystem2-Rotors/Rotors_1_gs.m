@@ -9,7 +9,7 @@ clear all
 %are described by their respective comments.
 
 %% Parameters
-
+tic
 %Design Parameters
 theta = 1.3; %Angle of Attack
 omega = 1528; %Maximum angular velocity
@@ -81,7 +81,9 @@ rng default %for reproducibility
 gs = GlobalSearch;
 
 %Setting the options for fmincon
-options = optimoptions('fmincon','Algorithm','interior-point');
+algorithms = ["interior-point","sqp","sqp-legacy","active-point","trust-region-reflective"];
+algorithm = algorithms(1);
+options = optimoptions('fmincon','Algorithm',algorithm);
 
 %Average Density and Stress of Material
 rho = ((M(t).Density_LB + M(t).Density_UB)/2);
@@ -146,7 +148,8 @@ disp(['Thrust Generated [N]: ' num2str(M(q).Thrust)])
 disp(['Stress at root [Pa]: ' num2str(M(q).Stress)])
 disp(['Yield Strength [Pa]: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
 disp(['Deflection [m]: ' num2str(M(q).Deflection)])
-
+disp(['Algorithm: ' + algorithm])
+disp(['Time elapsed: ' num2str(toc)])
 
 %% Objective Function
 
