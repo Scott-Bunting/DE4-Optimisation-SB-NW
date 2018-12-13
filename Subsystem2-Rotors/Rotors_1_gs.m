@@ -9,15 +9,17 @@ clear all
 %are described by their respective comments.
 
 %% Parameters
+
 tic
+
 %Design Parameters
-theta = 1.3; %Angle of Attack
+theta = 1.3; %Angle of attack
 omega = 1528; %Maximum angular velocity
-rho_air = 1.225; %Density of Air
-g = 9.81; %Acceleration due to Gravity
+rho_air = 1.225; %Density of air
+g = 9.81; %Acceleration due to gravity
 n_r = 4; %Number of rotors
 n_b = 2; %Number of blades per rotor
-m_d = 1.4; %Mass of Drone
+m_d = 1.4; %Mass of drone
 PF = 2; %Power factor
 
 %% Bounds and Initial Point
@@ -26,16 +28,18 @@ PF = 2; %Power factor
 x0 = [0.03,0.03,0.08,0.005,0.005];
 
 %Lower Bounds
-lb = [0.001, 0.001, 0.001, 0.001, 0.001];
+%lb = [0.001, 0.001, 0.001, 0.001, 0.001];
+lb = [0.005, 0.005, 0, 0.005, 0.001];
 
 %The lower bounds are set at 1mm, as it is considered unreasonable for any
 %of the Design Variables of a rotor blade to be smaller than this.
 
 %Upper Bounds
-ub = [0.05, 0.05, 0.5, 0.5, 0.05];
+%ub = [Inf, Inf, Inf, Inf, Inf];
+ub = [0.01, 0.01, 0.2, 0.2, 0.01];
 
 %The upper bounds have varying limits.
-%The thickness is constrained to 20mm after comparison with blades on the
+%The thickness is constrained to 5mm after comparison with blades on the
 %market.
 %The width is constrained to 50mm as this is within the diameter of the
 %motor.
@@ -72,6 +76,7 @@ M = table2struct(mat);
 
 %Selecting index, depending on material
 t = 1; %Index for Carbon Fibre
+%t = input(prompt); %to accelerate testing
 
 %% Optimisation
 
@@ -81,7 +86,9 @@ rng default %for reproducibility
 gs = GlobalSearch;
 
 %Setting the options for fmincon
-algorithms = ["interior-point","sqp","sqp-legacy","active-point","trust-region-reflective"];
+algorithms = ["interior-point","sqp","sqp-legacy","active-set"...
+    ,"trust-region-reflective"]; %exclude trust-region reflective
+%a = input(prompt); %to accelerate testing
 algorithm = algorithms(1);
 options = optimoptions('fmincon','Algorithm',algorithm);
 
@@ -98,6 +105,7 @@ fun = @(x)objectiveFunctionEnd(x, rho);
 problem = createOptimProblem('fmincon','x0',x0,'objective',fun,...
     'nonlcon',confun,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
 
+%[x,fval,exitflag,output] = fmincon(problem);
 [x,fval,exitflag,output,solutions] = run(gs,problem);
 
 %Executing Optimisation Function
@@ -157,7 +165,7 @@ function f = objectiveFunctionEnd(x, rhoRotor)
 
     %% Objective function definition
     
-    f = rhoRotor*x(1)*(x(2)*(x(3)-x(4)) + x(5)*x(4));
+    f = rhoRotor*pi*x(2)*(x(1)*x(3) + x(5)*x(4));
 
 end
 
