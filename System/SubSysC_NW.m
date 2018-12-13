@@ -39,7 +39,7 @@ disp(' ');
 
 disp('>> Analysis of optimization algorithms <<');
 
-[t, name] = CantileverMultiAlg(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
+% [t, name] = CantileverMultiAlg(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
 
 % disp(' ');
 % disp('Fastest algoirthm:');
@@ -49,7 +49,7 @@ disp('>> Analysis of optimization algorithms <<');
 
 disp('>> Analysis of bound and linear constraint activity <<');
 
-%[x, mc, name] = CantileverMultiCrossSec(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
+CantileverBoundTest(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
 
 % for i=1:5
 %     disp(i);
