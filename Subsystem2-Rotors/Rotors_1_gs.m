@@ -90,7 +90,7 @@ E = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9;
 
 %Creating instances of the Objective function and Constraint function
 confun = @(x)constraintFunctionEnd(x, rho, sig, E); 
-fun = @(x)objectiveFunction(x, rho);
+fun = @(x)objectiveFunctionEnd(x, rho);
 
 %Using createOptimProblem
 problem = createOptimProblem('fmincon','x0',x0,'objective',fun,...
@@ -145,6 +145,23 @@ disp(['Stress at root: ' num2str(M(q).Stress)])
 disp(['Deflection: ' num2str(M(q).Deflection)])
 disp(['Yield stress: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
 
+
+%% Objective Function
+
+function f = objectiveFunctionEnd(x, rhoRotor)
+    
+    %% Paramaters for objective function
+    
+    numberRotors = 4;
+    numberBlades = 2;
+    
+    %% Objective function definition
+    
+    f = numberRotors*numberBlades*rhoRotor*x(1)*(x(2)*(x(3)-x(4)) + x(5)*x(4));
+
+end
+
+%% Non-linear constraint function
 function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
 
     %% Function input variables
