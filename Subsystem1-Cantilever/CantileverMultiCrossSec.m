@@ -134,10 +134,10 @@ for i=1:2 %m
     
     if ef > 0
         Solutions =[Solutions fval];
-        X = [X [x(1), x(2), x(3), x(4)]']
+        X = [X [x(1), x(2), x(3), x(4)]'];
     else
         Solutions =[Solutions Inf];
-        X = [X [Inf, Inf, Inf, Inf]']
+        X = [X [Inf, Inf, Inf, Inf]'];
     end
 
     
