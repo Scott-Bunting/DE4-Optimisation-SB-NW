@@ -151,12 +151,7 @@ disp(['Deflection [m]: ' num2str(M(q).Deflection)])
 %% Objective Function
 
 function f = objectiveFunctionEnd(x, rhoRotor)
-    
-    %% Paramaters for objective function
-    
-    numberRotors = 4;
-    numberBlades = 2;
-    
+
     %% Objective function definition
     
     f = rhoRotor*x(1)*(x(2)*(x(3)-x(4)) + x(5)*x(4));
