@@ -28,7 +28,7 @@ x0 = [0.03,0.03,0.08,0.005,0.005];
 %Lower Bounds
 
 %x(2) originally set to 0.005 and then amended after constraints analysis
-lb = [0, 0.002, 0, 0.005, 0.001];
+lb = [0, 0.002, 0, 0.005, 0.0001];
 
 %Upper Bounds
 ub = [0.01, 0.01, 0.2, 0.2, 0.01];

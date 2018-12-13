@@ -19,7 +19,7 @@ mc = 0.5;
 mr = 0.5;
 rpm = 14000;
 r = 0.1867;
-l = 0.8;
+l = 0.5;
 p_cfrp = 29.95;
 
 md = m1 + mm + mc*4 + mr;
@@ -36,23 +36,24 @@ price_list_c = [];
 mass_list_r = [];
 mass_list_c = [];
 
+
 while (dc > 0.01*10^-6 && dm > 0.001*10^-6)
     
     c1 = cost_c + cost_r;
-    [x, mc] = Cantilever(Fl,mm,md2,rpm,l);
+    [x, mc] = CantileverSubSys(Fl,mm,md2,rpm,l,0.001,1550,800*10^6,110*10^9);
     mass_list_c = [mass_list_c mc];
     md1 = m1 + mm + mc + mr;
     cost_c = mc*p_cfrp;
     l = x(4);
     price_list_c = [price_list_c cost_c];
     
-    [x, Fl, mr, cost_r] = main_function(md1, sqrt(l/2));
+    [x, Fl, mr, cost_r] = Rotors_Sys(md1, sqrt(l/2));
     mass_list_r = [mass_list_r mr];
     thrust_list = [thrust_list Fl];
     price_list_r = [price_list_r cost_r];
     
     md2 = m1 + mm + mc + mr;
-    l = x(3);
+    l = 2*x(3);
     c2 = cost_c + cost_r;
     
     dm = md1 - md2; 

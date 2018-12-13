@@ -55,7 +55,7 @@ beq = [];
 
 %% Reading material properties
 
-filename = 'mat_ces.csv';
+filename = 'mat_par.csv';
 
 %Import Material Properties as Table
 mat = readtable(filename);
@@ -88,7 +88,8 @@ for t=1:m
     sig = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6;
     E = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9;
     M(t).YM = E;
-
+    
+    tic
     %Creating instances of the Objective function and Constraint function
     confun = @(x)constraintFunctionEnd(x, rho, sig, E); 
     fun = @(x)objectiveFunctionEnd(x, rho);
@@ -99,7 +100,7 @@ for t=1:m
 
     %[x,fval,exitflag,output] = fmincon(problem);
     [x,fval,exitflag,output,solutions] = run(gs,problem);
-
+    fin = toc;
     %Executing Optimisation Function
     %[x,fval,exitflag,output] = fmincon(problem);
 
@@ -127,6 +128,7 @@ for t=1:m
     M(t).Deflection = (disLoad*x(3)^4)/(8*E*I);
     M(t).ExitFlag = exitflag;
     M(t).Vars = x;
+    M(t).Time = fin;
 end
 
 %% Reporting Results
@@ -150,8 +152,7 @@ for t=1:m
     disp(['Stress at root [Pa]: ' num2str(M(t).Stress)])
     disp(['Yield Strength [Pa]: ' num2str(((M(t).YS_LB + M(t).YS_UB)/2)*10^6)])
     disp(['Deflection [m]: ' num2str(M(t).Deflection)])
-    %disp(['Algorithm: ' + algorithm])
-    %disp(['Time elapsed: ' num2str(toc)])
+    disp(['Time [s] :' num2str(M(t).Time)])
 end
 
 %Finding index of struct with smallest mass
@@ -163,7 +164,6 @@ disp(['Price per rotor [£]: ' num2str(M(idx).Cost)])
 disp(' ')
 disp(['Total mass [kg]: ' num2str(8*M(idx).Mass)])
 disp(['Total price [£]: ' num2str(8*M(idx).Cost)])
-
 disp(['Time :' num2str(toc)])
 figure(1);
 scatter([M.Cost], [M.Mass], 5, 'filled');
