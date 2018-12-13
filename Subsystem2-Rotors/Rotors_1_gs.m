@@ -10,8 +10,6 @@ clear all
 
 %% Parameters
 
-tic
-
 %Design Parameters
 theta = 1.3; %Angle of attack
 omega = 1528; %Maximum angular velocity
@@ -80,7 +78,7 @@ t = 1; %Index for Carbon Fibre
 t = input('Material Index '); %to accelerate testing
 
 %% Optimisation
-
+tic
 rng default %for reproducibility
 
 %Initiating Global Search
@@ -108,7 +106,7 @@ problem = createOptimProblem('fmincon','x0',x0,'objective',fun,...
 
 %[x,fval,exitflag,output] = fmincon(problem);
 [x,fval,exitflag,output,solutions] = run(gs,problem);
-
+fin = toc;
 %Executing Optimisation Function
 %[x,fval,exitflag,output] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,confun,options);
 
@@ -158,7 +156,7 @@ disp(['Stress at root [Pa]: ' num2str(M(q).Stress)])
 disp(['Yield Strength [Pa]: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
 disp(['Deflection [m]: ' num2str(M(q).Deflection)])
 disp(['Algorithm: ' + algorithm])
-disp(['Time elapsed: ' num2str(toc)])
+disp(['Time elapsed: ' num2str(fin)])
 
 %% Objective Function
 
