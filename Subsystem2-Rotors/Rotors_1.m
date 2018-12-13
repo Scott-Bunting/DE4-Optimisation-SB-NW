@@ -167,7 +167,7 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     volNoLift = pi*x(2)*x(5)*x(4);
     
     %Thrust Constraint (Including min. requirement and Mass of rotors)
-    c1 = (powerFactor*massDrone*g)... /(numberRotors*numberBlades)...
+    c1 = (powerFactor*massDrone*g).../(numberRotors*numberBlades)...
         - (thrust - rhoMaterial*g*(volLift + volNoLift));
     
     %% Root Stress Inequality
