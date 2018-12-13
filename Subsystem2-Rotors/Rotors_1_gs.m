@@ -30,22 +30,8 @@ x0 = [0.03,0.03,0.08,0.005,0.005];
 %x(2) originally set to 0.005 and then amended after constraints analysis
 lb = [0, 0.002, 0, 0.005, 0.001];
 
-%The lower bounds are set at 1mm, as it is considered unreasonable for any
-%of the Design Variables of a rotor blade to be smaller than this.
-
 %Upper Bounds
-%ub = [Inf, Inf, Inf, Inf, Inf];
 ub = [0.01, 0.01, 0.2, 0.2, 0.01];
-
-%The upper bounds have varying limits.
-%The thickness is constrained to 5mm after comparison with blades on the
-%market.
-%The width is constrained to 50mm as this is within the diameter of the
-%motor.
-%The length is constrained to 500mm because any larger would make the drone
-%too large for the application we have proposed.
-
-%All of these need to be amended.
 
 %% Semi-active Constraints
 
@@ -87,8 +73,8 @@ gs = GlobalSearch;
 %Setting the options for fmincon
 algorithms = ["interior-point","sqp","sqp-legacy","active-set"...
     ,"trust-region-reflective"]; %exclude trust-region reflective
-a = input('Algorithm '); %to accelerate testing
-algorithm = algorithms(a);
+%a = input('Algorithm '); %to accelerate testing
+algorithm = algorithms(2);
 options = optimoptions('fmincon','Algorithm',algorithm);
 
 %Average Density and Stress of Material
@@ -112,17 +98,17 @@ fin = toc;
 
 %% Updating Struct with Optimal data
 
-%Cross-sectional area of root
-areaNoLift = pi*x(2)*x(5);
+%Moment of Inertia for Bending Stress
+momentAreaNoLift = pi*(x(2)/2)*(x(5)/2)^3;
 
 %Safety factor for root strength
-FOS = 1.5;
+safetyFactor = 1.5;
 
-%Thrust
+%Thrust Calculation
 thrust = 2*sin(theta)*omega*rho_air*g*(x(3)^2 - x(4)^2)*x(1);
 
-%Stress at root
-sigmaRoot = (thrust*x(3)/2)/areaNoLift;
+%Stress at root (No Lift Area)
+sigmaRoot = ((safetyFactor*thrust*x(3)/2)/momentAreaNoLift)*(x(2)/2);
 
 %Append to the Structured Array
 M(t).Mass = fval;
@@ -213,9 +199,10 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     
     %Cross-sectional area of root
     areaNoLift = pi*x(2)*x(5);
+    momentAreaNoLift = pi*(x(2)/2)*(x(5)/2)^3;
     
     %Stress at root (No Lift Area)
-    sigmaRoot = (safetyFactor*thrust*x(3)/2)/areaNoLift;
+    sigmaRoot = ((safetyFactor*thrust*x(3)/2)/momentAreaNoLift)*(x(2)/2);
     
     %Stress Constraint
     c2 = sigmaRoot - sigmaMaterial;
@@ -240,13 +227,12 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     %When unbounded, the order of these constraints directly affects how
     %fmincon attempts to solve the problem
     
-    c = c2;
+    c = [c1;c2;c3];
     
     %% Non-linear Constraints (Equalities)
     %Thrust is an equality for these bounds
     
-    ceq = [c1;
-        c3];
+    ceq = 0; ...[c1;c3];
     
 end
 

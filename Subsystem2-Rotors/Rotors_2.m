@@ -106,16 +106,16 @@ for t=1:m
     %% Updating Struct with Optimal data
 
     %Cross-sectional area of root
-    areaNoLift = pi*x(2)*x(5);
-
+    momentAreaNoLift = pi*(x(2)/2)*(x(5)/2)^3;
+    
     %Safety factor for root strength
-    FOS = 1.5;
+    safetyFactor = 1.5;
 
     %Thrust
     thrust = 2*sin(theta)*omega*rho_air*g*(x(3)^2 - x(4)^2)*x(1);
-
-    %Stress at root
-    sigmaRoot = (thrust*x(3)/2)/areaNoLift;
+    
+    %Stress at root (No Lift Area)
+    sigmaRoot = ((safetyFactor*thrust*x(3)/2)/momentAreaNoLift)*(x(2)/2);
 
     %Append to the Structured Array
     M(t).Mass = fval;
@@ -226,9 +226,10 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     
     %Cross-sectional area of root
     areaNoLift = pi*x(2)*x(5);
+    momentAreaNoLift = pi*(x(2)/2)*(x(5)/2)^3;
     
     %Stress at root (No Lift Area)
-    sigmaRoot = (safetyFactor*thrust*x(3)/2)/areaNoLift;
+    sigmaRoot = ((safetyFactor*thrust*x(3)/2)/momentAreaNoLift)*(x(2)/2);
     
     %Stress Constraint
     c2 = sigmaRoot - sigmaMaterial;
@@ -253,13 +254,13 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     %When unbounded, the order of these constraints directly affects how
     %fmincon attempts to solve the problem
     
-    c = c2;
+    c = [c1;c2;c3];
     
     %% Non-linear Constraints (Equalities)
     % Currently none. Deflection will probably end up being an equality
     % constraint as the deflection always tends to the limit set by the
     % inequality.
     
-    ceq = [c1;c3];
+    ceq = 0; ...[c1;c3];
     
 end
