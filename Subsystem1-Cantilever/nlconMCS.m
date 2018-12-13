@@ -1,4 +1,4 @@
-function [c,ceq] = nlconMCS(x, Fl, mm, g, md, E, ro, k, sigmax, defmax, fmin, i)
+function [c,ceq] = nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin, i)
 
 Ix = [(x(2)^3*x(1)-(x(2)-2*x(3))^3*(x(1)-2*x(3)))/12,
     ((x(2)/2)^3*(x(1)/2)-((x(2)/2)-2*x(3))^3*((x(1)/2)-2*x(3)))*pi/4];
@@ -20,8 +20,8 @@ sigyd = Md*x(1)/(2*Iy(i));
 
 delxl = Fl*x(4)^3/(3*E*Ix(i));
 
-fnf1 = (k^2)/(2*pi) * sqrt( (E*Iy(i)) / ((ro * (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3)))))*x(4)^4));
-fnf2 = (k^2)/(2*pi) * sqrt( (E*Ix(i)) / ((ro * (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3)))))*x(4)^4));
+fnf1 = (k^2)/(2*pi) * sqrt( (E*Iy(i)) / ((rho * (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3)))))*x(4)^4));
+fnf2 = (k^2)/(2*pi) * sqrt( (E*Ix(i)) / ((rho * (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3)))))*x(4)^4));
 
 c1 = -sigmax+sigxd;
 c2 = -sigmax+sigyd;

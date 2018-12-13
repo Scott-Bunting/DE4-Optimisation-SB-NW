@@ -3,7 +3,7 @@ function [t, name] = CantileverMultiAlg(Fl,mm,md,rpm,d,defmax,rho,sigmax,E)
 g = 9.8;
 k = 1.875;
 fmin = rpm/60*1.3;
-Algorithms = ["interior-point"; "sqp"; "Active-set"];
+Algorithms = ["interior-point"; "sqp"; "Active-set"; "ga"];
 Times = [];
 Solutions = [];
 Flags = [];
@@ -42,6 +42,16 @@ for i=1:3 %Looping through the algorithms
     Flags = [Flags; ef];
     
 end
+
+
+opts = optimoptions(@ga,'PopulationSize', 25,'MaxGenerations', 200,...
+                    'EliteCount', 4,'FunctionTolerance', 1e-10,'Display','iter');
+                
+tic
+[~, fbest, ef] = ga(objective, 4, [], [], [], [], lb, ub, nonlincon, [], opts);
+Times =  [Times; toc];
+Solutions = [Solutions; fbest];
+Flags = [Flags; ef];
 
 T = table(Algorithms,Flags,Solutions,Times)
 [~ ,j]= min(Times);
