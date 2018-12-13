@@ -17,7 +17,7 @@ disp('|||||||||||||||||||||||||||||||||||||');
 disp('-------------> START <---------------');
 disp('|||||||||||||||||||||||||||||||||||||');
 
-[x, mc, name] = CantileverMultiMat(Fl,mm,md,rpm,l);
+[x, mc, name] = CantileverMMGS(Fl,mm,md,rpm,l);
 
 disp(['Lightest arm made of: ' name '  Weighting: ' num2str(mc)]);
 
