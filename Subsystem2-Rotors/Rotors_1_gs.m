@@ -28,8 +28,9 @@ PF = 2; %Power factor
 x0 = [0.03,0.03,0.08,0.005,0.005];
 
 %Lower Bounds
-%lb = [0.001, 0.001, 0.001, 0.001, 0.001];
-lb = [0.005, 0.005, 0, 0.005, 0.001];
+
+%x(2) originally set to 0.005 and then amended after constraints analysis
+lb = [0, 0.002, 0, 0.005, 0.001];
 
 %The lower bounds are set at 1mm, as it is considered unreasonable for any
 %of the Design Variables of a rotor blade to be smaller than this.
@@ -50,11 +51,11 @@ ub = [0.01, 0.01, 0.2, 0.2, 0.01];
 
 %% Semi-active Constraints
 
-A = [0 0 -1 1 0;
-    -1 0 0 0 1];
+A = [];...[0 0 -1 1 0;
+    %-1 0 0 0 1];
 
-b = [0;
-    0];
+b = [];...[0;
+    %0];
 
 %% Active constraints
 
@@ -76,7 +77,7 @@ M = table2struct(mat);
 
 %Selecting index, depending on material
 t = 1; %Index for Carbon Fibre
-%t = input(prompt); %to accelerate testing
+t = input('Material Index '); %to accelerate testing
 
 %% Optimisation
 
@@ -88,8 +89,8 @@ gs = GlobalSearch;
 %Setting the options for fmincon
 algorithms = ["interior-point","sqp","sqp-legacy","active-set"...
     ,"trust-region-reflective"]; %exclude trust-region reflective
-%a = input(prompt); %to accelerate testing
-algorithm = algorithms(1);
+a = input('Algorithm '); %to accelerate testing
+algorithm = algorithms(a);
 options = optimoptions('fmincon','Algorithm',algorithm);
 
 %Average Density and Stress of Material
@@ -241,15 +242,12 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     %When unbounded, the order of these constraints directly affects how
     %fmincon attempts to solve the problem
     
-    c = [c1;
-        c2;
-        c3];
+    c = c2;
     
     %% Non-linear Constraints (Equalities)
-    % Currently none. Deflection will probably end up being an equality
-    % constraint as the deflection always tends to the limit set by the
-    % inequality.
+    %Thrust is an equality for these bounds
     
-    ceq = 0;
+    ceq = [c1;
+        c3];
     
 end
