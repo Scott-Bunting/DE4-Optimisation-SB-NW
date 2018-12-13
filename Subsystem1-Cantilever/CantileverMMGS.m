@@ -15,7 +15,13 @@ mat = readtable(filename);
 M = table2struct(mat);
 [m] = size(M);
 
-options = optimoptions(@fmincon,'Algorithm', 'sqp','MaxFunctionEvaluations',5000);
+rng default %for reproducibility
+
+%Setting Options for Optimisation
+options = optimoptions('fmincon','Algorithm','interior-point','MaxFunctionEvaluations',3000);
+gs = GlobalSearch;
+
+%options = optimoptions(@fmincon,'Algorithm', 'sqp','MaxFunctionEvaluations',5000)
 
 %For loop to iterate through materials
 for i=1:1 %m
@@ -29,9 +35,12 @@ for i=1:1 %m
     objective = @(x) (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3))))*x(4)*rho;
 
     % initial guess
-    x0 = [0.1,0.1,0.005,1];
+    x0 = [0.09,0.09,0.004,0.9];
+    %x0 = [0.03,0.03,0.002,0.51];
 
     % variable bounds
+%     lb = [0 0 0 0];
+%     ub = [inf inf inf inf];
     lb = [0.005 0.005 0.001 r];
     ub = [0.1 0.1 0.005 1];
 
@@ -39,23 +48,24 @@ for i=1:1 %m
     disp(['Initial arm weight [kg]: ' num2str(objective(x0))])
 
     % linear constraints
-    A = [];
-    b = [];
+    A = [-1,0,2,0; 0,-1,2,0; 10,0,0,-1; 0,10,0,-1];
+    b = [0;0;0;0];
+%     A = [];
+%     b = [];
     Aeq = [];
     beq = [];
 
     % nonlinear constraints
     nonlincon = @(x)nlcon1(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin);
-    problem = createOptimProblem('fmincon','x0',x0,'objective',objective,...
-    'nonlcon',nonlincon,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
-
-    [x,fval,ef,output] = run(gs,problem);
 
     % optimize with fmincon
     %[X,FVAL,EXITFLAG,OUTPUT,LAMBDA,GRAD,HESSIAN] 
     % = fmincon(FUN,X0,A,B,Aeq,Beq,LB,UB,NONLCON,OPTIONS)
     tic
-    %[x, fval, ef, output, lambda] = fmincon(objective,x0,A,b,Aeq,beq,lb,ub,nonlincon, options);
+%     problem = createOptimProblem('fmincon','x0',x0,'objective',objective,...
+%     'nonlcon',nonlincon,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
+%     [x,fval,ef,output] = run(gs,problem);
+    [x, fval, ef, output, lambda] = fmincon(objective,x0,A,b,Aeq,beq,lb,ub,nonlincon, options);
     toc
     % show final objective
     disp(M(i).Name)
@@ -143,7 +153,7 @@ for i=1:1 %m
         disp(['f2nf [Hz] = ' num2str(-c(5)+fmin) ' << inactive, limit: ' num2str(fmin)])
     end
     
-    if ef == 1
+    if ef > 0
         M(i).Mass = fval;
         M(i).Cost = fval*(M(i).Price_LB + M(i).Price_UB)/2;
         M(i).x1 = x(1);
