@@ -2,19 +2,13 @@ close all
 clear all
 
 %% Notes
+
 %Where applicable, I have used the same variable notation as described in
 %the function documentation. Where not applicable, or multiple variations
 %are required, the variable names have been changed but remain suitable and
 %are described by their respective comments.
 
-%% Change Initial Values and Bounds to:
-
-% %Width
-% x1_lb = xx
-% x1_ub = xx
-% x1_in = xx
-
-%% Initial point & Parameters
+%% Parameters
 
 %Design Parameters
 theta = 1.3; %Angle of Attack
@@ -24,6 +18,7 @@ g = 9.81; %Acceleration due to Gravity
 n_r = 4; %Number of rotors
 n_b = 2; %Number of blades per rotor
 m_d = 1.4; %Mass of Drone
+PF = 2; %Power Factor
 
 %% Bounds
 % Need rationale for all of these bounds. Whether that is due to
@@ -33,12 +28,14 @@ m_d = 1.4; %Mass of Drone
 x0 = [0.03,0.03,0.08,0.005,0.005];
 
 %Lower bounds
-lb = [0.01, 0.005, 0, 0.005, 0.005];
-%lb = [0.0, 0.00, 0, 0.00, 0.00];
+%lb = [0.01, 0.005, 0, 0.005, 0.005];
+lb = [0.001, 0.001, 0.001, 0.001, 0.001];
 
 %Ask whether the upper bound for this should be Infinite or it should be
 %limited in the bounds. It is inherently limited by the linear inequality.
-ub = [0.05, 0.1, 0.12, 0.12, 0.05];
+%ub = [0.05, 0.1, 0.12, 0.12, 0.05];
+%ub = [1,1,1,1,1];
+ub = [Inf,Inf,Inf,Inf,Inf];
 
 %% Semi-active Constraints
 
@@ -91,12 +88,12 @@ M = table2struct(mat);
 
 %% Minimisation function
 
-options = optimoptions('fmincon','Display','iter','Algorithm','interior-point');
+options = optimoptions('fmincon','Algorithm','interior-point');
 
 %For loop to iterate through materials
 for t=1:m
-       
-    %Average Desnity and Stress of Material
+    
+    %Average Density and Stress of Material
     rho = ((M(t).Density_LB + M(t).Density_UB)/2);
     sig = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6;
     E = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9;
@@ -108,14 +105,26 @@ for t=1:m
     %Executing Optimisation Function
     [x,fval,exitflag,output] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,confun,options);
     
+    %Cross-sectional area of root
+    areaNoLift = pi*x(2)*x(5);
+    
+    %Safety factor for root strength
+    FOS = 1.5;
+    
+    %Thrust
+    Thrust = 2*sin(theta)*omega*rho_air*g*(x(3)^2 - x(4)^2)*x(1);
+    
+    %Stress at root
+    sigmaRoot = (Thrust*x(3)/2)/areaNoLift;
+    
     %Append the metrics from the Material
     M(t).Mass = fval;
     M(t).Cost = fval*(M(t).Price_LB + M(t).Price_UB)/2;
-    M(t).Thrust = 2*n_r*n_b*(x(3)^2 - x(4)^2)*x(1)*sin(theta)*omega*rho_air*g;
-    M(t).Stress = (m_d*g*(x(3)))/(n_r*n_b*pi*x(5)*x(2)^3);
+    M(t).Thrust = n_r*n_b*Thrust;
+    M(t).Stress = sigmaRoot;
     I = (pi/4)*(x(1)/2)*(x(2)/2)^3;
-    om = (M(t).Thrust/(n_r*n_b))/x(3);
-    M(t).Deflection = (om*x(3)^4/8*E*I);
+    om = Thrust/x(3);
+    M(t).Deflection = (om*x(3)^4)/(8*E*I);
     M(t).ExitFlag = exitflag;
     M(t).Vars = x;
 end
