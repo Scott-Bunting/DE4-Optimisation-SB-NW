@@ -1,62 +1,68 @@
-function [out, m, name] = CantileverMultiCrossSec(Fl,mm,md,rpm,d,defmax,rho,sigmax,E)
-%CANTILEVER This function optimises the dimensions of the cantilever
+function [] = CantileverBoundTest(Fl,mm,md,rpm,d,defmax,rho,sigmax,E)
 %% Reading material properties
 g = 9.8;
 k = 1.875;
 fmin = rpm/60*1.3;
-CrossSections = ["Rectanular cross-section", "Eliptic cross-section"];
+Algorithms = ["interior-point"; "sqp"; "Active-set"];
+Times = [];
 Solutions = [];
-X = [];
+Flags = [];
 
 rng default %for reproducibility
-
-%Setting Options for Optimisation
-options = optimoptions('fmincon','Algorithm','interior-point','MaxFunctionEvaluations',3000);
 gs = GlobalSearch;
 
 % objective function elipse
-objective = {@(x) (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3))))*x(4)*rho, ...
-    @(x) (x(1)/2*x(2)/2*pi-((x(1)/2-x(3))*(x(2)/2-x(3))*pi))*x(4)*rho};
+objective = @(x) (x(1)/2*x(2)/2*pi-((x(1)/2-x(3))*(x(2)/2-x(3))*pi))*x(4)*rho;
 
-%options = optimoptions(@fmincon,'Algorithm', 'sqp','MaxFunctionEvaluations',5000)
 
-%For loop to iterate through cross sections
-for i=1:2 %m
-    disp(CrossSections(i));
+for i=1:3 %Looping through the algorithms
+
+    %Setting Options for Optimisation
+    options = optimoptions('fmincon','Algorithm',Algorithms(i),'MaxFunctionEvaluations',3000);
 
     % initial guess
-    x0 = [0.09,0.09,0.004,0.9];
-    %x0 = [0.03,0.03,0.002,0.51];
-
-    % variable bounds
-%     lb = [0 0 0 0];
-%     ub = [inf inf inf inf];
-    lb = [0.005 0.005 0.001 d/2];
-    ub = [0.1 0.1 0.005 1];
-
-    % linear constraints
-    A = [-1,0,2,0; 0,-1,2,0; 10,0,0,-1; 0,10,0,-1];
-    b = [0;0;0;0];
-%     A = [];
-%     b = [];
-    Aeq = [];
-    beq = [];
+    x0 = [0.1,0.1,0.005,1];
+    
+    if i<3
+        disp(' ');
+        disp(' ');
+        disp('variable bounds OFF');
+        lb = [0 0 0 0];
+        ub = [Inf Inf Inf Inf];
+    else
+        disp(' ');
+        disp(' ');
+        disp('variable bounds ON');
+        lb = [0.005 0.005 0.001 d/2];
+        ub = [0.1 0.1 0.005 1];
+    end
+    
+    if i<2
+        disp('linear constraints OFF');
+        A = [];
+        b = [];
+        Aeq = [];
+        beq = [];
+    else
+        disp('linear constraints ON');
+        A = [-1,0,2,0; 0,-1,2,0; 10,0,0,-1; 0,10,0,-1];
+        b = [0;0;0;0];
+        Aeq = [];
+        beq = [];
+    end
+    
 
     % nonlinear constraints
-    nonlincon = @(x)nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin, i);
-
-    tic
-    problem = createOptimProblem('fmincon','x0',x0,'objective',objective{i},...
+    nonlincon = @(x)nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin, 2);
+    
+     problem = createOptimProblem('fmincon','x0',x0,'objective',objective,...
     'nonlcon',nonlincon,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
-    [x,fval,ef] = run(gs,problem);
-%     [x, fval, ef, output, lambda] = fmincon(objective{i},x0,A,b,Aeq,beq,lb,ub,nonlincon, options);
-    toc
+    [x,fval,ef,output] = run(gs,problem);
 
-    % show initial and final objective
-    disp(['Initial arm weight [kg]: ' num2str(objective{i}(x0))])
-    disp(['Final arm weight [kg]: ' num2str(objective{i}(x))])
-
-    [c, ceq] = nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin,i);
+%     [x, fval, ef] = fmincon(objective,x0,A,b,Aeq,beq,lb,ub,nonlincon, options);
+    
+    disp(['Final arm weight [kg]: ' num2str(objective(x))])
+    [c, ceq] = nlcon1(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin);
 
     disp(['exit flag = ' num2str(ef)])
 
@@ -131,20 +137,7 @@ for i=1:2 %m
     else
         disp(['f2nf [Hz] = ' num2str(-c(5)+fmin) ' << inactive, limit: ' num2str(fmin)])
     end
-    
-    if ef > 0
-        Solutions =[Solutions fval];
-        X = [X [x(1), x(2), x(3), x(4)]'];
-    else
-        Solutions =[Solutions Inf];
-        X = [X [Inf, Inf, Inf, Inf]'];
-    end
-
-    
 end
 
-[m, j]= min(Solutions);
-out = X(:,j);
-name = CrossSections(j);
 end
 

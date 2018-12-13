@@ -251,3 +251,4 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
         c3];
     
 end
+

@@ -6,7 +6,7 @@ clear all
 %Drone properties
 Fl = 7.84; %Liftforce [N]
 mm = 0.06; %Mass of one motor [kg]
-mc = 0.5; %Mass of the cantilever [kg] (preliminary)
+mc = 0.3; %Mass of the cantilever [kg] (preliminary)
 mr = 0.1; %Mass of one rotor [kg]
 m1 = 0.1; %Mass of the rest of the drone [kg]
 rpm = 14000; %RPM of motors
@@ -29,19 +29,27 @@ disp(' ');
 disp('>> Evaluation of rectangular and eliptic cross-sections <<');
 disp(' ');
 
-[x, mc, name] = CantileverMultiCrossSec(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
-
-disp(' ');
-disp('Solution:');
-disp(name);
-disp(['Weight: [kg] ' num2str(mc)]);
-disp(' ');
+% [x, mc, name] = CantileverMultiCrossSec(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
+% 
+% disp(' ');
+% disp('Solution:');
+% disp(name);
+% disp(['Weight: [kg] ' num2str(mc)]);
+% disp(' ');
 
 disp('>> Analysis of optimization algorithms <<');
 
-disp('>> Analysis of bound and constraint activity <<');
+% [t, name] = CantileverMultiAlg(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
 
-%[x, mc, name] = CantileverMultiCrossSec(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
+% disp(' ');
+% disp('Fastest algoirthm:');
+% disp(name);
+% disp(['Time: [s] ' num2str(t)]);
+% disp(' ');
+
+disp('>> Analysis of bound and linear constraint activity <<');
+
+CantileverBoundTest(Fl,mm,md,rpm,d,defmax,rho,sigmax,E);
 
 % for i=1:5
 %     disp(i);
