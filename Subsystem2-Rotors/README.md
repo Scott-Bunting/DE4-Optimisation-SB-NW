@@ -24,7 +24,3 @@ Less than 10 Seconds with SQP
 
 The script requires MATLAB R2018b.
 * Global Optimisation Toolbox required
-
-*Highlight any additional dependencies/requirements to run this code.
-Optimisation Toolbox?
-CES Edupack was used for the material data but isn't referenced.*
