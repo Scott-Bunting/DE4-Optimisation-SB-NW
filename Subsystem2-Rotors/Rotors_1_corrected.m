@@ -40,7 +40,7 @@ ub = [0.01, 0.01, 0.2, 0.2, 0.01];
 
 %% Semi-active Constraints
 
-A = [-1 0 0 0 1]; %[0 0 -1 1 0;
+A = []; %[-1 0 0 0 1]; %[0 0 -1 1 0;
 
 %Constrains the width of the root to be 2mm smaller than the width of the
 %blade
@@ -49,9 +49,8 @@ b = -0.005;
 
 %% Active constraints
 
-
-Aeq = [];
-beq = [];
+Aeq = [-1 0 0 0 1];
+beq = -0.005;
 
 %% Reading material properties
 
