@@ -10,15 +10,20 @@ clear all
 
 %% Parameters
 
-%Design Parameters
+%Universal Parameters
+rhoAir = 1.225; %Density of air
+g = 9.81; %Acceleration due to gravity
+
+%Drone Design Parameters
+massDrone = 1.4; %Mass of drone
+numberRotors = 4; %No. of rotors
+numberBlades = 2; %No. of blades per rotor
 theta = 1.3; %Angle of attack
 omega = 1528; %Maximum angular velocity
-rho_air = 1.225; %Density of air
-g = 9.81; %Acceleration due to gravity
-n_r = 4; %Number of rotors
-n_b = 2; %Number of blades per rotor
-m_d = 1.4; %Mass of drone
-PF = 2; %Power factor
+
+%Safety Factors
+powerFactor = 2; %Power factor
+safetyFactor = 1.5; %Safety factor
 
 %% Bounds and Initial Point
 
@@ -60,64 +65,74 @@ M = table2struct(mat);
 [m ] = size(M);
 
 %Selecting index, depending on material
-t = 1; %Index for Carbon Fibre
+%t = 1; %Index for Carbon Fibre
 t = input('Material Index '); %to accelerate testing
 
 %% Optimisation
+
+%Start Timing
 tic
+
+%Setting up Random Number Generator
 rng default %for reproducibility
 
 %Initiating Global Search
 gs = GlobalSearch;
 
 %Setting the options for fmincon
-algorithms = ["interior-point","sqp","sqp-legacy","active-set"...
-    ,"trust-region-reflective"]; %exclude trust-region reflective
+algorithms = ["interior-point","sqp","sqp-legacy","active-set"];
+
 %a = input('Algorithm '); %to accelerate testing
 algorithm = algorithms(2);
 options = optimoptions('fmincon','Algorithm',algorithm);
 
-%Average Density and Stress of Material
-rho = ((M(t).Density_LB + M(t).Density_UB)/2);
-sig = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6;
-E = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9;
+%Material Properties
+rhoMaterial = ((M(t).Density_LB + M(t).Density_UB)/2); %Density
+sigmaMaterial = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6; %Yield Strength
+EMaterial = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9; %Young's Modulus
+priceMaterial = (M(t).Price_LB + M(t).Price_UB)/2; %Price per kg
 
 %Creating instances of the Objective function and Constraint function
-confun = @(x)constraintFunctionEnd(x, rho, sig, E); 
-fun = @(x)objectiveFunctionEnd(x, rho);
+confun = @(x)constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, EMaterial); 
+fun = @(x)objectiveFunctionEnd(x, rhoMaterial);
 
 %Using createOptimProblem
 problem = createOptimProblem('fmincon','x0',x0,'objective',fun,...
     'nonlcon',confun,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
 
-%[x,fval,exitflag,output] = fmincon(problem);
+%Executing Optimisation Function with GlobalSearch
 [x,fval,exitflag,output,solutions] = run(gs,problem);
+
+%Executing Optimisation Function without GlobalSearch
+%[x,fval,exitflag,output] = fmincon(problem);
+
+%Stop Timing
 fin = toc;
-%Executing Optimisation Function
-%[x,fval,exitflag,output] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,confun,options);
 
 %% Updating Struct with Optimal data
 
 %Moment of Inertia for Bending Stress
 momentAreaNoLift = pi*(x(2)/2)*(x(5)/2)^3;
 
-%Safety factor for root strength
-safetyFactor = 1.5;
+%Thrust and Load Calculation
+thrust = 2*sin(theta)*omega*rhoAir*g*(x(3)^2 - x(4)^2)*x(1);
+disLoad = thrust/x(3);
 
-%Thrust Calculation
-thrust = 2*sin(theta)*omega*rho_air*g*(x(3)^2 - x(4)^2)*x(1);
+%Distance from Neutral Axis
+y = (x(2)/2);
 
 %Stress at root (No Lift Area)
-sigmaRoot = ((safetyFactor*thrust*x(3)/2)/momentAreaNoLift)*(x(2)/2);
+sigmaRoot = ((safetyFactor*thrust*x(3)/2)/momentAreaNoLift);
+
+%Maximum Deflection
+deflectionRotor = (disLoad*x(3)^4)/(8*EMaterial*momentAreaNoLift);
 
 %Append to the Structured Array
 M(t).Mass = fval;
-M(t).Cost = fval*(M(t).Price_LB + M(t).Price_UB)/2;
+M(t).Cost = fval*priceMaterial;
 M(t).Thrust = thrust;
 M(t).Stress = sigmaRoot;
-I = (pi/4)*(x(1)/2)*(x(2)/2)^3;
-disLoad = thrust/x(3);
-M(t).Deflection = (disLoad*x(3)^4)/(8*E*I);
+M(t).Deflection = deflectionRotor;
 M(t).ExitFlag = exitflag;
 M(t).Vars = x;
 
@@ -127,21 +142,28 @@ disp(output)
 
 q=t;
 disp(['Material: ' M(q).Name])
-disp(['Exit flag:' num2str(M(q).ExitFlag)])
+disp('------')
 disp(['Variables'])
+disp('------')
 disp(['Width x(1) [m] = ' num2str(M(q).Vars(1))])
 disp(['Thickness x(2) [m] = ' num2str(M(q).Vars(2))])
 disp(['Length x(3) [m] = ' num2str(M(q).Vars(3))])
 disp(['Length Root x(4) [m] = ' num2str(M(q).Vars(4))])
 disp(['Width Root x(5) [m] = ' num2str(M(q).Vars(5))])
+disp('------')
 disp(['Metrics'])
+disp('------')
 disp(['Price [£] = ' num2str(M(q).Cost)])
 disp(['Mass [kg] = ' num2str(M(q).Mass)])
 disp(['Thrust Generated [N]: ' num2str(M(q).Thrust)])
 disp(['Stress at root [Pa]: ' num2str(M(q).Stress)])
 disp(['Yield Strength [Pa]: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
 disp(['Deflection [m]: ' num2str(M(q).Deflection)])
+disp('------')
+disp(['Algorithm & Performance'])
+disp('------')
 disp(['Algorithm: ' + algorithm])
+disp(['Exit flag: ' num2str(M(q).ExitFlag)])
 disp(['Time elapsed: ' num2str(fin)])
 
 %% Objective Function
@@ -180,7 +202,7 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     
     %% Thrust Inequality
     %The minimum thrust generated must be greater than 2x (defined by the
-    %Power factor) the force due to gravity on the drone.
+    %Power factor) the weight of the drone.
     
     %Thrust generated by each rotor
     thrust = 2*sin(theta)*omega*rhoAir*g*(x(3)^2 - x(4)^2)*x(1);
@@ -198,7 +220,6 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     %strength of the material of the rotor.
     
     %Cross-sectional area of root
-    areaNoLift = pi*x(2)*x(5);
     momentAreaNoLift = pi*(x(2)/2)*(x(5)/2)^3;
     
     %Stress at root (No Lift Area)
