@@ -4,18 +4,26 @@
 
 ## Main Script
 
-*This is where an explanation of the script should go.
-Ideally only one script instead of the 3 files.
-Move the functions to the end of the main script.*
+There are three scripts here. Rotors_1 (report and corrected) and Rotors_2.
+  
+Rotors 1 is the single material optimisation. 
+When prompted to select a material, enter 1 for Carbon-Fibre Reinforced Plastic.  
+  
+Rotors 2 is the multi-material optimisation, using the mat_ces file and selecting the lightest material.  
+When prompted to select an algorithm, enter 2 for SQP.  
 
 ## Execution Time
 
-*Statistics on execution time.
-Provide statistics of laptop being used and performance, add context.*
+### Rotors_1_report, Rotors_2_corrected
+2-5 Seconds with SQP
+
+### Rotors_2
+Less than 10 Seconds with SQP
 
 ## Dependencies
 
 The script requires MATLAB R2018b.
+* Global Optimisation Toolbox required
 
 *Highlight any additional dependencies/requirements to run this code.
 Optimisation Toolbox?
