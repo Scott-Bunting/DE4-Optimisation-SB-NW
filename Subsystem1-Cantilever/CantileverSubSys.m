@@ -1,52 +1,54 @@
 function [x, w] = CantileverSubSys(Fl,mm,md,rpm,d,defmax,rho,sigmax,E)
-%CANTILEVER This function optimises the dimensions of the cantilever
-%% parameters
-g = 9.8;
-k = 1.875;
-fmin = rpm/60*1.3;
-rng default
+%CANTILEVER SUBSYSTEM This function optimises the dimensions of the cantilever
+%% Reading material properties
+g = 9.8; %Gravitational acceleration
+k = 1.875; %Rezonence mode shape coef
+fmin = rpm/60*1.3; %Calculating the max operation frequency of motors
 
-%% optimisation
+rng default %Making rnd reproducible
+
+%Objective function of elliptic cross-section
 objective = @(x) (x(1)/2*x(2)/2*pi-((x(1)/2-x(3))*(x(2)/2-x(3))*pi))*x(4)*rho;
+
+%Setting options for optimisation
+options = optimoptions('fmincon','Algorithm','sqp','MaxFunctionEvaluations',5000);
 gs = GlobalSearch;
 
-%Setting Options for Optimisation
-options = optimoptions('fmincon','Algorithm','sqp','MaxFunctionEvaluations',5000);
-
-% initial guess
+%Initial guess
 x0 = [0.1,0.1,0.005,1];
 
-% variable bounds
+%Variable bounds
 lb = [0.005 0.005 0.001 d/2];
 ub = [0.1 0.1 0.005 1];
 
-% linear constraints
+%Linear constraints
 A = [-1,0,2,0; 0,-1,2,0; 10,0,0,-1; 0,10,0,-1];
 b = [0;0;0;0];
 Aeq = [];
 beq = [];
 
-% nonlinear constraints
+%Nonlinear constraints
 nonlincon = @(x)nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin, 2);
 
+%Running fmincon optimizer with global search to ensure that the result
+%is indeed a global min
 problem = createOptimProblem('fmincon','x0',x0,'objective',objective,...
 'nonlcon',nonlincon,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
 [x,fval,ef] = run(gs,problem);
 w = fval;
 
-% optimize with fmincon
-%[x, fval, ef, output, lambda] = fmincon(objective,x0,A,b,Aeq,beq,lb,ub,nonlincon);
-
-% show initial and final objective
+%Displaying initial and final objective
 disp(['Initial arm weight [kg]: ' num2str(objective(x0))])
 disp(['Final arm weight [kg]: ' num2str(objective(x))])
 
+%Calculating constrain function values at the min point
 [c, ~] = nlcon1(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin);
 
-% print solution
+%Print solution and exit flag
 disp('Solution: elipse')
 disp(['exit flag = ' num2str(ef)])
 
+%Displaying information regarding bounds and constraint activity
 if (x(1))<(lb(1)*1.1)
     disp(['x1 (a) [m] = ' num2str(x(1)) ' << lb-hit'])
 elseif (x(1))>(ub(1)*0.9)
