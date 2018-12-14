@@ -32,22 +32,23 @@ x0 = [0.03,0.03,0.08,0.005,0.005];
 
 %Lower Bounds
 %x(2) originally set to 0.005 and then amended after constraints analysis
-lb = [0, 0.002, 0, 0.005, 0.001];
+%Length of root now 10mm
+lb = [0, 0.002, 0, 0.01, 0.001];
 
 %Upper Bounds
 ub = [0.01, 0.01, 0.2, 0.2, 0.01];
 
 %% Semi-active Constraints
 
-A = [0 0 -1 1 0;
-    -1 0 0 0 1];
+A = [-1 0 0 0 1]; %[0 0 -1 1 0;
 
-b = [0;
-    0];
+%Constrains the width of the root to be 2mm smaller than the width of the
+%blade
+
+b = -0.005;
 
 %% Active constraints
 
-% Equalities commented out as replaced by bounds.
 
 Aeq = [];
 beq = [];
