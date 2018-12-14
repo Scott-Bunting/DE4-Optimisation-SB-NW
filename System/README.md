@@ -1,6 +1,5 @@
-# This is the README for Subsystem 2
-  
-*Subsystem 2 is the Rotors subsystem, consisting of a multi-objective mass and cost optimisation*
+# This is the README for the System Level Optimisation
+ 
   
 ## Main Script
   
