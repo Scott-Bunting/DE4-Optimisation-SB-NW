@@ -4,9 +4,10 @@
 
 ## Main Script
 
-*This is where an explanation of the script should go.
-Ideally only one script instead of the 3 files.
-Move the functions to the end of the main script.*
+SubSysC_NW: Cantilever Subsystem stand-alone
+This script allows the cantilever subsystem to be evaluated independently from the rest of the system with predefined variables.
+
+CantileverSubSys: This function optimises the dimensions of the cantilever
 
 ## Execution Time
 
