@@ -45,12 +45,12 @@ A = []; %[-1 0 0 0 1]; %[0 0 -1 1 0;
 %Constrains the width of the root to be 2mm smaller than the width of the
 %blade
 
-b = -0.005;
+b = []; %-0.005;
 
 %% Active constraints
 
 Aeq = [-1 0 0 0 1];
-beq = -0.005;
+beq = [-0.005];
 
 %% Reading material properties
 
