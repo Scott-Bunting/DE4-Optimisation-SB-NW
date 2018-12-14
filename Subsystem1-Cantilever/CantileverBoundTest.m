@@ -1,28 +1,26 @@
 function [] = CantileverBoundTest(Fl,mm,md,rpm,d,defmax,rho,sigmax,E)
+%CANTILEVER SUBSYSTEM This function tests the importance of bounds and
+%linear constraints
 %% Reading material properties
-g = 9.8;
-k = 1.875;
-fmin = rpm/60*1.3;
-Algorithms = ["interior-point"; "sqp"; "Active-set"];
-Times = [];
-Solutions = [];
-Flags = [];
+g = 9.8; %Gravitational acceleration
+k = 1.875; %Rezonence mode shape coef
+fmin = rpm/60*1.3; %Calculating the max operation frequency of motors
 
 rng default %for reproducibility
-gs = GlobalSearch;
 
-% objective function elipse
+%Objective function of elliptic cross-section
 objective = @(x) (x(1)/2*x(2)/2*pi-((x(1)/2-x(3))*(x(2)/2-x(3))*pi))*x(4)*rho;
 
 
-for i=1:3 %Looping through the algorithms
+for i=1:3 %Looping through the options regarding bounds and linear constraints
 
-    %Setting Options for Optimisation
-    options = optimoptions('fmincon','Algorithm',Algorithms(i),'MaxFunctionEvaluations',3000);
+    %Setting options for optimisation
+    options = optimoptions('fmincon','Algorithm','sqp','MaxFunctionEvaluations',3000);
 
-    % initial guess
+    %Initial guess
     x0 = [0.1,0.1,0.005,1];
     
+    %Bounds are off in the first two cases and on for the final run
     if i<3
         disp(' ');
         disp(' ');
@@ -37,6 +35,7 @@ for i=1:3 %Looping through the algorithms
         ub = [0.1 0.1 0.005 1];
     end
     
+    %Linear constraints are off for the initial run and on afterwards
     if i<2
         disp('linear constraints OFF');
         A = [];
@@ -50,22 +49,23 @@ for i=1:3 %Looping through the algorithms
         Aeq = [];
         beq = [];
     end
-    
 
-    % nonlinear constraints
+    %Nonlinear constraints
     nonlincon = @(x)nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin, 2);
     
-     problem = createOptimProblem('fmincon','x0',x0,'objective',objective,...
-    'nonlcon',nonlincon,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
-    [x,fval,ef,output] = run(gs,problem);
-
-%     [x, fval, ef] = fmincon(objective,x0,A,b,Aeq,beq,lb,ub,nonlincon, options);
+    %Running fmincon optimizer
+    [x, ~, ef] = fmincon(objective,x0,A,b,Aeq,beq,lb,ub,nonlincon, options);
     
+    %Displaying final objective
     disp(['Final arm weight [kg]: ' num2str(objective(x))])
-    [c, ceq] = nlcon1(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin);
-
+    
+    %Calculating constrain function values at the min point
+    [c, ~] = nlcon1(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin);
+    
+    %Showing the exit flag
     disp(['exit flag = ' num2str(ef)])
 
+    %Displaying information regarding bounds and constraint activity
     if (x(1))<(lb(1)*1.1)
         disp(['x1 (a) [m] = ' num2str(x(1)) ' << lb-hit'])
     elseif (x(1))>(ub(1)*0.9)
@@ -122,7 +122,7 @@ for i=1:3 %Looping through the algorithms
         disp(['defx [m] = ' num2str(c(3)+defmax) ' << inactive, limit: ' num2str(defmax)])
     end
 
-    if (-c(4)+fmin)<fmin
+    if (ceil(-c(4)+fmin))<fmin
         disp(['f1nf [Hz] = ' num2str(-c(4)+fmin) ' << dissatisfied, limit: ' num2str(fmin)])
     elseif (-c(4)+fmin)<(fmin*1.1)
         disp(['f1nf [Hz] = ' num2str(-c(4)+fmin) ' << active, limit: ' num2str(fmin)])
@@ -130,7 +130,7 @@ for i=1:3 %Looping through the algorithms
         disp(['f1nf [Hz] = ' num2str(-c(4)+fmin) ' << inactive, limit: ' num2str(fmin)])
     end
 
-    if (-c(5)+fmin)<fmin
+    if (ceil(-c(5)+fmin))<fmin
         disp(['f2nf [Hz] = ' num2str(-c(5)+fmin) ' << dissatisfied, limit: ' num2str(fmin)])
     elseif (-c(5)+fmin)<(fmin*1.1)
         disp(['f2nf [Hz] = ' num2str(-c(5)+fmin) ' << active, limit: ' num2str(fmin)])

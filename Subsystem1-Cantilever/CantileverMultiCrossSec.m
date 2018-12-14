@@ -1,65 +1,64 @@
 function [out, m, name] = CantileverMultiCrossSec(Fl,mm,md,rpm,d,defmax,rho,sigmax,E)
-%CANTILEVER This function optimises the dimensions of the cantilever
+%CANTILEVER SUBSYSTEM This function optimises the dimensions of the
+%cantilever with two cross-sections
 %% Reading material properties
-g = 9.8;
-k = 1.875;
-fmin = rpm/60*1.3;
+g = 9.8; %Gravitational acceleration
+k = 1.875; %Rezonence mode shape coef
+fmin = rpm/60*1.3; %Calculating the max operation frequency of motors
 CrossSections = ["Rectanular cross-section", "Eliptic cross-section"];
-Solutions = [];
-X = [];
+Solutions = []; %Array for solutions (weight)
+X = []; %Array for solutions (variables)
 
-rng default %for reproducibility
+rng default %Making rnd reproducible
 
-%Setting Options for Optimisation
-options = optimoptions('fmincon','Algorithm','interior-point','MaxFunctionEvaluations',3000);
+%Setting options for optimisation
+options = optimoptions(@fmincon,'Algorithm', 'sqp','MaxFunctionEvaluations',5000);
 gs = GlobalSearch;
 
-% objective function elipse
+%Objective functions for rectangular and elliptic cross-sections
 objective = {@(x) (x(1)*x(2)-((x(1)-2*x(3))*(x(2)-2*x(3))))*x(4)*rho, ...
     @(x) (x(1)/2*x(2)/2*pi-((x(1)/2-x(3))*(x(2)/2-x(3))*pi))*x(4)*rho};
 
-%options = optimoptions(@fmincon,'Algorithm', 'sqp','MaxFunctionEvaluations',5000)
-
-%For loop to iterate through cross sections
-for i=1:2 %m
+%Looping through the cross-sections
+for i=1:2
+    disp(' ');
     disp(CrossSections(i));
 
-    % initial guess
+    %Initial guess
     x0 = [0.09,0.09,0.004,0.9];
-    %x0 = [0.03,0.03,0.002,0.51];
 
-    % variable bounds
-%     lb = [0 0 0 0];
-%     ub = [inf inf inf inf];
+    %Variable bounds
     lb = [0.005 0.005 0.001 d/2];
     ub = [0.1 0.1 0.005 1];
 
-    % linear constraints
+    %Linear constraints
     A = [-1,0,2,0; 0,-1,2,0; 10,0,0,-1; 0,10,0,-1];
     b = [0;0;0;0];
-%     A = [];
-%     b = [];
     Aeq = [];
     beq = [];
 
-    % nonlinear constraints
+    %Nonlinear constraints
     nonlincon = @(x)nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin, i);
 
-    tic
+    tic %Sarting clock to measure optimization time
+    %Running fmincon optimizer with global search to ensure that the result
+    %is indeed a global min
     problem = createOptimProblem('fmincon','x0',x0,'objective',objective{i},...
     'nonlcon',nonlincon,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
     [x,fval,ef] = run(gs,problem);
-%     [x, fval, ef, output, lambda] = fmincon(objective{i},x0,A,b,Aeq,beq,lb,ub,nonlincon, options);
-    toc
+    toc %Stoping clock and displaying optimization time
 
-    % show initial and final objective
+    %Displaying initial and final objective
     disp(['Initial arm weight [kg]: ' num2str(objective{i}(x0))])
     disp(['Final arm weight [kg]: ' num2str(objective{i}(x))])
-
-    [c, ceq] = nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin,i);
-
+    
+    %Calculating constrain function values at the min point
+    [c, ~] = nlconMCS(x, Fl, mm, g, md, E, rho, k, sigmax, defmax, fmin,i);
+    
+    %Showing the exit flag
     disp(['exit flag = ' num2str(ef)])
-
+    
+    %Displaying information regarding bounds and constraint activity
     if (x(1))<(lb(1)*1.1)
         disp(['x1 (a) [m] = ' num2str(x(1)) ' << lb-hit'])
     elseif (x(1))>(ub(1)*0.9)
@@ -116,7 +115,7 @@ for i=1:2 %m
         disp(['defx [m] = ' num2str(c(3)+defmax) ' << inactive, limit: ' num2str(defmax)])
     end
 
-    if (-c(4)+fmin)<fmin
+    if (ceil(-c(4)+fmin))<fmin
         disp(['f1nf [Hz] = ' num2str(-c(4)+fmin) ' << dissatisfied, limit: ' num2str(fmin)])
     elseif (-c(4)+fmin)<(fmin*1.1)
         disp(['f1nf [Hz] = ' num2str(-c(4)+fmin) ' << active, limit: ' num2str(fmin)])
@@ -124,7 +123,7 @@ for i=1:2 %m
         disp(['f1nf [Hz] = ' num2str(-c(4)+fmin) ' << inactive, limit: ' num2str(fmin)])
     end
 
-    if (-c(5)+fmin)<fmin
+    if (ceil(-c(5)+fmin))<fmin
         disp(['f2nf [Hz] = ' num2str(-c(5)+fmin) ' << dissatisfied, limit: ' num2str(fmin)])
     elseif (-c(5)+fmin)<(fmin*1.1)
         disp(['f2nf [Hz] = ' num2str(-c(5)+fmin) ' << active, limit: ' num2str(fmin)])
@@ -132,9 +131,10 @@ for i=1:2 %m
         disp(['f2nf [Hz] = ' num2str(-c(5)+fmin) ' << inactive, limit: ' num2str(fmin)])
     end
     
+    %Collecting results if the optimizer converged
     if ef > 0
-        Solutions =[Solutions fval];
-        X = [X [x(1), x(2), x(3), x(4)]'];
+        Solutions =[Solutions fval]; %Adding weight to array
+        X = [X [x(1), x(2), x(3), x(4)]']; %Adding wariables to array
     else
         Solutions =[Solutions Inf];
         X = [X [Inf, Inf, Inf, Inf]'];
@@ -143,6 +143,7 @@ for i=1:2 %m
     
 end
 
+%Returning minimum of the results
 [m, j]= min(Solutions);
 out = X(:,j);
 name = CrossSections(j);
