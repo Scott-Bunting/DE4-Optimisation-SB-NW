@@ -8,6 +8,7 @@ There are three scripts here. Rotors_1 (report and corrected) and Rotors_2.
   
 Rotors 1 is the single material optimisation. 
 When prompted to select a material, enter 1 for Carbon-Fibre Reinforced Plastic.  
+This script runs SQP as default. This can be edited in the code by changing the index of the algorithms list.  
   
 Rotors 2 is the multi-material optimisation, using the mat_ces file and selecting the lightest material.  
 When prompted to select an algorithm, enter 2 for SQP.  
