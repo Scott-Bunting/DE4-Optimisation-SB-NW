@@ -134,6 +134,7 @@ M(t).Stress = sigmaRoot;
 M(t).Deflection = deflectionRotor;
 M(t).ExitFlag = exitflag;
 M(t).Vars = x;
+M(t).Time = fin;
 
 %% Reporting Results
 
@@ -163,7 +164,7 @@ disp(['Algorithm & Performance'])
 disp('------')
 disp(['Algorithm: ' + algorithm])
 disp(['Exit flag: ' num2str(M(q).ExitFlag)])
-disp(['Time elapsed: ' num2str(fin)])
+disp(['Time elapsed: ' num2str(M(q).Time)])
 
 %% Objective Function
 

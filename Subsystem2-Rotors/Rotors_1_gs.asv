@@ -19,6 +19,12 @@ n_r = 4; %Number of rotors
 n_b = 2; %Number of blades per rotor
 m_d = 1.4; %Mass of drone
 PF = 2; %Power factor
+numberRotors = 4; %No. of rotors
+numberBlades = 2; %No. of blades per rotor
+massDrone = 1.4; %Mass of drone
+rhoAir = 1.225; %Density of Air
+powerFactor = 2; %Power factor
+safetyFactor = 1.5; %Safety factor
 
 %% Bounds and Initial Point
 
@@ -60,11 +66,13 @@ M = table2struct(mat);
 [m ] = size(M);
 
 %Selecting index, depending on material
-t = 1; %Index for Carbon Fibre
+%t = 1; %Index for Carbon Fibre
 t = input('Material Index '); %to accelerate testing
 
 %% Optimisation
+
 tic
+
 rng default %for reproducibility
 
 %Initiating Global Search
@@ -77,50 +85,52 @@ algorithms = ["interior-point","sqp","sqp-legacy","active-set"...
 algorithm = algorithms(2);
 options = optimoptions('fmincon','Algorithm',algorithm);
 
-%Average Density and Stress of Material
-rho = ((M(t).Density_LB + M(t).Density_UB)/2);
-sig = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6;
-E = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9;
+%Material Properties
+rhoMaterial = ((M(t).Density_LB + M(t).Density_UB)/2); %Density
+sigmaMaterial = ((M(t).YS_LB + M(t).YS_UB)/2)*10^6; %Yield Strength
+EMaterial = ((M(t).YM_LB + M(t).YM_UB)/2)*10^9; %Young's Modulus
+avgCostMaterial = (M(t).Price_LB + M(t).Price_UB)/2; %Price per kg
 
 %Creating instances of the Objective function and Constraint function
-confun = @(x)constraintFunctionEnd(x, rho, sig, E); 
-fun = @(x)objectiveFunctionEnd(x, rho);
+confun = @(x)constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, EMaterial); 
+fun = @(x)objectiveFunctionEnd(x, rhoMaterial);
 
 %Using createOptimProblem
 problem = createOptimProblem('fmincon','x0',x0,'objective',fun,...
     'nonlcon',confun,'Aineq',A,'bineq',b,'lb',lb,'ub',ub,'options',options);
 
-%[x,fval,exitflag,output] = fmincon(problem);
+%Executing Optimisation Function with GlobalSearch
 [x,fval,exitflag,output,solutions] = run(gs,problem);
+
+%Executing Optimisation Function without GlobalSearch
+%[x,fval,exitflag,output] = fmincon(problem);
+
+%
 fin = toc;
-%Executing Optimisation Function
-%[x,fval,exitflag,output] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,confun,options);
 
 %% Updating Struct with Optimal data
 
 %Moment of Inertia for Bending Stress
 momentAreaNoLift = pi*(x(2)/2)*(x(5)/2)^3;
 
-%Safety factor for root strength
-safetyFactor = 1.5;
-
-%Thrust Calculation
+%Thrust and Load Calculation
 thrust = 2*sin(theta)*omega*rho_air*g*(x(3)^2 - x(4)^2)*x(1);
+disLoad = thrust/x(3);
+
+%Distance from Neutral Axis
+y = (x(2)/2);
 
 %Stress at root (No Lift Area)
-sigmaRoot = ((safetyFactor*thrust*x(3)/2)/momentAreaNoLift)*(x(2)/2);
+sigmaRoot = ((safetyFactor*thrust*x(3)/2)/momentAreaNoLift);
 
 %Append to the Structured Array
 M(t).Mass = fval;
 M(t).Cost = fval*(M(t).Price_LB + M(t).Price_UB)/2;
 M(t).Thrust = thrust;
 M(t).Stress = sigmaRoot;
-I = (pi/4)*(x(1)/2)*(x(2)/2)^3;
-disLoad = thrust/x(3);
-M(t).Deflection = (disLoad*x(3)^4)/(8*E*I);
+M(t).Deflection = (disLoad*x(3)^4)/(8*EMaterial*I);
 M(t).ExitFlag = exitflag;
 M(t).Vars = x;
-M(t).Time = fin;
 
 %% Reporting Results
 
@@ -143,7 +153,7 @@ disp(['Stress at root [Pa]: ' num2str(M(q).Stress)])
 disp(['Yield Strength [Pa]: ' num2str(((M(q).YS_LB + M(q).YS_UB)/2)*10^6)])
 disp(['Deflection [m]: ' num2str(M(q).Deflection)])
 disp(['Algorithm: ' + algorithm])
-disp(['Time elapsed: ' num2str(M(q).Time)])
+disp(['Time elapsed: ' num2str(fin)])
 
 %% Objective Function
 
@@ -228,12 +238,12 @@ function [c,ceq] = constraintFunctionEnd(x, rhoMaterial, sigmaMaterial, E)
     %When unbounded, the order of these constraints directly affects how
     %fmincon attempts to solve the problem
     
-    c = [c2;c3];
+    c = [c1;c2;c3];
     
     %% Non-linear Constraints (Equalities)
     %Thrust is an equality for these bounds
     
-    ceq = c1;
+    ceq = 0; ...[c1;c3];
     
 end
 
